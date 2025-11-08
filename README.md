@@ -1,0 +1,2 @@
+# amayadori
+GitHub PagesでJekyllを使って構築したポートフォリオサイト。カスタムドメインとMarkdownによるブログ投稿。
