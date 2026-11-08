@@ -16,6 +16,10 @@ Three.js + Playwright + FFmpeg。**リポジトリ内で動作確認済み**: �
 
 （CLAUDE.md に承認ゲート=スクリプト→ドラフト→最終 を定義済み。以後はClaudeが順に進めます）
 
+## 横型 / コンセプトアート
+- 後から横型: `--format landscape`（1920×1080）。AE用: `scripts/export_ae.sh <p> 24 landscape`。縦→横はカメラ構図の再調整が必要。
+- コンセプトアート: `node scripts/concept.mjs --project <p>` でキャラシート、`--still <秒>` で世界観の1枚絵。リファレンスを送ったら `character.json` を更新して再生成。
+
 ## Premiere / After Effects で仕上げる
 `scripts/export_ae.sh <project>` で **環境 / キャラ(透過ProRes 4444)** を別パス出力。AEで影・グレード・ブラー・テキスト、Premiereでナレ/BGM合わせ。
 2D図解は `kind:'info'` ショットをそのまま使うか、`infographic.js` の配色(navy `#0b1a33`)をAEのテンプレに流用可。

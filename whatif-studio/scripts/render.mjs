@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // Deterministic frame renderer: Vite dev server + headless Chromium (WebGL) -> PNG frames -> FFmpeg.
+// --format portrait|landscape|square (default portrait 1080x1920)  --still <sec> renders one frame (key art)
 // usage: node scripts/render.mjs --project demo [--w 1080 --h 1920 --fps 24] [--pass beauty|char|env]
 //        [--from 0 --to 5] [--subframes 4] [--frames-only] [--audio out/demo/mix.wav] [--crf 17] [--out out/x.mp4]
 import { chromium } from 'playwright';
@@ -9,10 +10,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const a = Object.fromEntries(process.argv.slice(2).reduce((acc, v, i, arr) => (v.startsWith('--') ? [...acc, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : acc), []));
-const project = a.project || 'demo', W = +(a.w || 1080), H = +(a.h || 1920), pass = a.pass || 'beauty';
+const FMT = { portrait: [1080, 1920], landscape: [1920, 1080], square: [1080, 1080] }[a.format] || [1080, 1920];
+const project = a.project || 'demo', W = +(a.w || FMT[0]), H = +(a.h || FMT[1]), pass = a.pass || 'beauty';
 const sub = +(a.subframes || 1), crf = a.crf || 17;
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const outDir = path.join(root, 'out', project, `frames_${pass}`);
+const outDir = path.join(root, 'out', project, `frames_${pass}_${a.format || 'portrait'}`);
 fs.rmSync(outDir, { recursive: true, force: true }); fs.mkdirSync(outDir, { recursive: true });
 
 const server = await createServer({ root, logLevel: 'error', server: { port: 5199, strictPort: false } }); await server.listen();
@@ -22,6 +24,7 @@ const page = await browser.newPage({ viewport: { width: W, height: H }, deviceSc
 page.on('pageerror', (e) => { console.error('PAGE ERROR', e.message); process.exit(1); });
 await page.goto(`${url}?project=${project}&w=${W}&h=${H}&pass=${pass}`); await page.waitForFunction('window.__ready === true', null, { timeout: 120000 });
 const meta = await page.evaluate('window.__meta'); const fps = +(a.fps || meta.fps);
+if (a.still) { a.from = a.still; a.to = +a.still + 1 / fps; }
 const t0 = +(a.from || 0), t1 = +(a.to || meta.duration); const n = Math.round((t1 - t0) * fps), N = n * sub;
 console.log(`${project} ${W}x${H} ${fps}fps pass=${pass} frames=${n} subframes=${sub}`);
 for (let i = 0; i < N; i++) {

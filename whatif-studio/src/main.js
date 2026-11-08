@@ -12,7 +12,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserv
 renderer.setPixelRatio(1); renderer.setSize(W, H); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.getElementById('stage').append(renderer.domElement);
-const overlay = document.getElementById('info'); const DW = 1080, DH = 1920; overlay.width = DW; overlay.height = DH; overlay.style.width = W + 'px'; overlay.style.height = H + 'px'; const ctx = overlay.getContext('2d');
+const overlay = document.getElementById('info'); const LAND = W >= H; const DW = LAND ? 1920 : 1080, DH = LAND ? 1080 : 1920; /* 2D design space follows orientation */ overlay.width = DW; overlay.height = DH; overlay.style.width = W + 'px'; overlay.style.height = H + 'px'; const ctx = overlay.getContext('2d');
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 400);

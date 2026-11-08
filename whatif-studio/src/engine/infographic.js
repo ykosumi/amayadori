@@ -51,5 +51,5 @@ export function card(ctx, x, y, w, h, p, { color = '#12284d', stroke = C.cyan } 
 export function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 export function caption(ctx, text, w, h, p = 1) { // bottom subtitle, safe-area aware for 9:16
   if (!text) return; ctx.save(); ctx.globalAlpha = clamp(p * 3); ctx.font = `800 58px ${FONT}`; ctx.textAlign = 'center';
-  text.split('\n').forEach((ln, i, a) => { const y = h * 0.82 + (i - (a.length - 1) / 2) * 76; ctx.lineWidth = 14; ctx.strokeStyle = 'rgba(8,16,36,.85)'; ctx.lineJoin = 'round'; ctx.strokeText(ln, w / 2, y); ctx.fillStyle = '#fff'; ctx.fillText(ln, w / 2, y); }); ctx.restore();
+  text.split('\n').forEach((ln, i, a) => { const y = h * (w > h ? 0.88 : 0.82) + (i - (a.length - 1) / 2) * 76; ctx.lineWidth = 14; ctx.strokeStyle = 'rgba(8,16,36,.85)'; ctx.lineJoin = 'round'; ctx.strokeText(ln, w / 2, y); ctx.fillStyle = '#fff'; ctx.fillText(ln, w / 2, y); }); ctx.restore();
 }

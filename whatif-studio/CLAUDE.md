@@ -12,6 +12,7 @@
 
 ## 工程と承認ゲート (順番を飛ばさない)
 1. `python3 scripts/analyze_reference.py reference/<file>.mp4` → コンタクトシート2枚/カット間隔/パレット/文字起こし。キャラ・照明・色・カメラ・ペーシングを要約。
+1.5. **コンセプトアート(リファレンス受領後)**: `projects/<name>/character.json`(色・名前・パレット)を参照から作り、`node scripts/concept.mjs --project <p>` でキャラシート(ターンアラウンド+表情+パレット)、`render.mjs --still <秒> --format landscape` で世界観キーアート(環境・照明・色)を出して**承認待ち**。体型・顔が違えば `src/engine/character.js` を調整。
 2. **ユーザーにトピックとボイスサービスを質問**(または5案提示)。
 3. 75–85秒スクリプト(下の構成)+ファクトチェック(出典URL・仮定ラベル)+タイムスタンプ付きストーリーボードを `projects/<name>/STORYBOARD.md` に書いて**承認待ち**。承認前にアセットを作らない。
 4. 承認後: `projects/<name>/scenes.js` を実装(`projects/demo` が手本)。必要なら `src/engine` を拡張。
@@ -22,6 +23,9 @@
 ## スクリプト構成 (秒)
 0–5 衝撃フック / 5–15 最初の驚く結果 / 15–27 ダイアグラムで科学説明 / 27–42 3Dで日常の結果 / 42–55 より大きな例でエスカレート / 55–70 予期せぬデメリット / 70–85 最後のひねり+記憶に残る終わり。
 全文に明確なビジュアルアクション。ナレーションは1文=1ショット以上で対応させる。
+
+## 縦横フォーマット
+`--format portrait|landscape|square`(既定 portrait 1080×1920)。2Dは向きに応じて設計座標(1080×1920 / 1920×1080)が切替わり、`draw(ctx,t,l,w,h,I)` の `w>h` で縦横レイアウトを分岐(demo参照)。3Dは同じシーンを再レンダでき、カメラ構図だけ要調整。AE合成は `scripts/export_ae.sh <p> 24 landscape`。
 
 ## コマンド
 - セットアップ(初回): `npm run setup`  (Linuxで古いChromium固定の場合 `CHROME_PATH=/path/to/chromium`)
