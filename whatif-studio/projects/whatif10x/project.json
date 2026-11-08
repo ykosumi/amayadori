@@ -1,0 +1,35 @@
+{
+  "name": "whatif10x",
+  "topic": "もしも あなたの動きが10倍速くなったら？",
+  "voice": {
+    "engine": "voicepeak",
+    "name": "Japanese Female 1",
+    "speed_pct": 100,
+    "note": "ユーザー指定『女性1』。Voicepeakのナレーター名は実機の表記に合わせて要確認(voicepeak --list-narrator)"
+  },
+  "music": "assets/music.wav",
+  "narration": [
+    {
+      "id": "l01",
+      "start": 0.0,
+      "lang": "j",
+      "text": "もしも、あなたの動きが10倍速くなったら？"
+    }
+  ],
+  "sfx": [
+    {
+      "at": 4.0,
+      "kind": "whoosh"
+    },
+    {
+      "at": 7.98,
+      "kind": "impact"
+    }
+  ],
+  "approval": {
+    "script": false,
+    "storyboard": false,
+    "drafts": false,
+    "final": false
+  }
+}

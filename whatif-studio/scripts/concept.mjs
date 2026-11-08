@@ -7,4 +7,4 @@ const server = await createServer({ root, logLevel: 'error' }); await server.lis
 const b = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--ignore-gpu-blocklist', '--enable-unsafe-swiftshader', '--use-angle=' + (process.env.GPU ? 'default' : 'swiftshader')] });
 const pg = await b.newPage({ viewport: { width: 2400, height: 1500 } }); pg.on('pageerror', (e) => { console.error(e.message); process.exit(1); });
 await pg.goto(`${url}concept.html?project=${p}`); await pg.waitForFunction('window.__ready', null, { timeout: 60000 });
-fs.mkdirSync(`${root}/out/${p}`, { recursive: true }); const o = `${root}/out/${p}/concept_character.png`; await pg.screenshot({ path: o }); console.log('OK', o); await b.close(); await server.close();
+fs.mkdirSync(`${root}/out/${p}`, { recursive: true }); const o = `${root}/out/${p}/concept_character.png`; await pg.locator('canvas').screenshot({ path: o }); console.log('OK', o); await b.close(); await server.close();

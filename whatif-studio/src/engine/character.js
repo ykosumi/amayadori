@@ -5,55 +5,69 @@ import { clamp, smooth, seg, outCubic } from './ease.js';
 // Dimensions (units ~ metres, stylised): leg 0.9, torso 0.7, head r 0.42.
 const LEG_U = 0.45, LEG_L = 0.45, ARM_U = 0.34, ARM_L = 0.34, HIP_H = 0.95;
 
-const mat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.65, metalness: 0, ...o });
-
-function limb(len, r, color) { // pivot at top, mesh hangs down
+const mkMat = (flat) => (c, o = {}) => (flat ? new THREE.MeshToonMaterial({ color: c }) : new THREE.MeshStandardMaterial({ color: c, roughness: 0.65, metalness: 0, ...o }));
+function limb(len, r, color, mat) { // pivot at top, mesh hangs down
   const g = new THREE.Group();
   const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, len - r * 2, 6, 12), mat(color));
   m.position.y = -len / 2; m.castShadow = true; g.add(m); return g;
 }
 
-export function createCharacter({ shirt = 0xff7a59, pants = 0x3d5a80, skin = 0xffd2b3, shoes = 0xf6f1e7, hair = 0x3b2a20 } = {}) {
+/**
+ * style 'chalk' (default, matches the crayon reference art): flat toon colours, dot eyes + line mouth (deadpan), blush,
+ * oversized stacked hat, big head, big shoes.  style 'glossy': original soft-3D look with eye whites/brows.
+ * hat: array of {color, y, rx, ry, rz} blobs stacked on the head (bottom->top). headScale enlarges the head.
+ */
+export function createCharacter({ style = 'chalk', shirt = 0xf24c4c, collar = 0x1e3be8, pants = 0xffe81a, skin = 0xffc27a, shoes = 0x8a4510, hair = 0xffe34d, blush = 0xe8905a,
+  headScale = 1.3, hat = [{ color: 0xe05cff, y: 0.36, rx: 0.62, ry: 0.16, rz: 0.62 }, { color: 0x35dc55, y: 0.62, rx: 0.5, ry: 0.34, rz: 0.5 }, { color: 0x35dc55, y: 0.98, rx: 0.34, ry: 0.3, rz: 0.34 }] } = {}) {
+  const chalk = style === 'chalk'; const mat = mkMat(chalk);
   const root = new THREE.Group();           // world placement (feet on y=0)
   const body = new THREE.Group(); root.add(body); // squash/stretch + bob
   const hips = new THREE.Group(); hips.position.y = HIP_H; body.add(hips);
 
   const torso = new THREE.Group(); hips.add(torso);
   const tMesh = new THREE.Mesh(new THREE.CapsuleGeometry(0.27, 0.42, 8, 16), mat(shirt));
-  tMesh.position.y = 0.38; tMesh.castShadow = true; torso.add(tMesh);
+  tMesh.position.y = 0.38; tMesh.castShadow = true; if (chalk) tMesh.scale.set(1.35, 0.95, 1.2); torso.add(tMesh);
+  if (chalk) { const bottom = new THREE.Mesh(new THREE.SphereGeometry(0.33, 20, 14), mat(pants)); bottom.scale.set(1.15, 0.6, 1.0); bottom.position.y = 0.08; torso.add(bottom);
+    const col = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.07, 10, 24), mat(collar)); col.rotation.x = Math.PI / 2; col.position.y = 0.74; torso.add(col); }
 
   const neck = new THREE.Group(); neck.position.y = 0.82; torso.add(neck);
-  const head = new THREE.Group(); head.position.y = 0.34; neck.add(head);
+  const head = new THREE.Group(); head.position.y = 0.34 * (chalk ? headScale : 1); head.scale.setScalar(chalk ? headScale : 1); neck.add(head);
   const skull = new THREE.Mesh(new THREE.SphereGeometry(0.42, 32, 24), mat(skin)); skull.castShadow = true; head.add(skull);
-  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.435, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.42), mat(hair));
-  cap.rotation.x = -0.25; cap.position.y = 0.02; head.add(cap);
+  if (chalk) {
+    hat.forEach((h) => { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), mat(h.color)); m.scale.set(h.rx, h.ry, h.rz); m.position.y = h.y; head.add(m); });
+    [-1, 1].forEach((sd) => { const tuft = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), mat(hair)); tuft.position.set(sd * 0.4, 0.05, 0); head.add(tuft); });
+  } else {
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.435, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.42), mat(hair));
+    cap.rotation.x = -0.25; cap.position.y = 0.02; head.add(cap);
+  }
 
   const eyes = [-1, 1].map((s) => {
     const eye = new THREE.Group(); eye.position.set(s * 0.15, 0.06, 0.37);
     const white = new THREE.Mesh(new THREE.SphereGeometry(0.095, 20, 16), mat(0xffffff, { roughness: 0.3 }));
-    white.scale.z = 0.5;
-    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 12), mat(0x1b1b2b, { roughness: 0.2 }));
-    pupil.position.z = 0.04; eye.add(white, pupil);
+    white.scale.z = 0.5; white.visible = !chalk;
+    const pupil = new THREE.Mesh(new THREE.SphereGeometry(chalk ? 0.035 : 0.05, 16, 12), mat(0x14141c, { roughness: 0.2 }));
+    pupil.position.z = chalk ? 0.02 : 0.04; eye.add(white, pupil);
     const brow = new THREE.Mesh(new THREE.CapsuleGeometry(0.014, 0.1, 4, 8), mat(hair));
-    brow.rotation.z = Math.PI / 2; brow.position.set(0, 0.15, 0.0); eye.add(brow);
+    brow.rotation.z = Math.PI / 2; brow.position.set(0, 0.15, 0.0); brow.visible = !chalk; eye.add(brow);
     head.add(eye); return { eye, pupil, brow, s };
   });
-  const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 12), mat(0x7a2a2a));
+  if (chalk) [-1, 1].forEach((sd) => { const b = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 10), mat(blush)); b.scale.set(1, 0.7, 0.3); b.position.set(sd * 0.27, -0.08, 0.34); head.add(b); });
+  const mouth = new THREE.Mesh(new THREE.SphereGeometry(chalk ? 0.06 : 0.08, 16, 12), mat(chalk ? 0x14141c : 0x7a2a2a));
   mouth.position.set(0, -0.17, 0.37); mouth.scale.set(1, 0.3, 0.4); head.add(mouth);
 
   const mkArm = (s) => { const sh = new THREE.Group(); sh.position.set(s * 0.34, 0.68, 0); torso.add(sh);
-    const up = limb(ARM_U, 0.06, skin); sh.add(up); const el = new THREE.Group(); el.position.y = -ARM_U; up.add(el);
-    const lo = limb(ARM_L, 0.055, skin); el.add(lo);
+    const up = limb(ARM_U, 0.06, skin, mat); sh.add(up); const el = new THREE.Group(); el.position.y = -ARM_U; up.add(el);
+    const lo = limb(ARM_L, 0.055, skin, mat); el.add(lo);
     const hand = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 10), mat(skin)); hand.position.y = -ARM_L; lo.add(hand);
     return { sh, el }; };
   const mkLeg = (s) => { const hp = new THREE.Group(); hp.position.set(s * 0.15, 0, 0); hips.add(hp);
-    const up = limb(LEG_U, 0.075, pants); hp.add(up); const kn = new THREE.Group(); kn.position.y = -LEG_U; up.add(kn);
-    const lo = limb(LEG_L, 0.065, pants); kn.add(lo);
-    const shoe = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 12), mat(shoes)); shoe.scale.set(0.8, 0.5, 1.45);
+    const up = limb(LEG_U, 0.075, chalk ? pants : pants, mat); hp.add(up); const kn = new THREE.Group(); kn.position.y = -LEG_U; up.add(kn);
+    const lo = limb(LEG_L, 0.065, chalk ? skin : pants, mat); kn.add(lo);
+    const shoe = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 12), mat(chalk ? shoes : 0xf6f1e7)); shoe.scale.set(chalk ? 1.0 : 0.8, 0.5, chalk ? 1.7 : 1.45);
     shoe.position.set(0, -LEG_L - 0.02, 0.07); shoe.castShadow = true; lo.add(shoe);
     return { hp, kn }; };
   const armL = mkArm(-1), armR = mkArm(1), legL = mkLeg(-1), legR = mkLeg(1);
-  const rig = { root, body, hips, torso, neck, head, eyes, mouth, armL, armR, legL, legR };
+  const rig = { root, body, hips, torso, neck, head, eyes, mouth, armL, armR, legL, legR, chalk };
   rig.setPose = (p) => setPose(rig, p);
   return rig;
 }
@@ -101,6 +115,7 @@ export function setPose(r, p) {
   r.eyes.forEach(({ eye, pupil, brow, s: side }) => {
     eye.scale.set(E.eyeS, E.eyeS * Math.max(0.08, open), E.eyeS);
     pupil.position.x = look.yaw * -0.05; pupil.position.y = look.pitch * 0.05;
+    if (r.chalk) return;
     brow.position.y = 0.15 + E.brow * 0.12; brow.rotation.z = Math.PI / 2 + side * E.brow * 0.6 * -1;
   });
   r.mouth.scale.set(E.mouth[0], E.mouth[1], 0.4);
