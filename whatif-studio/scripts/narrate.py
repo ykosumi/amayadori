@@ -10,6 +10,13 @@ def synth(line, path):
         from kokoro import KPipeline; import soundfile as sf, numpy as np
         pipe = KPipeline(lang_code=line.get("lang", "j")); chunks = [a for _, _, a in pipe(line["text"], voice=v["name"], speed=v.get("speed", 1.0))]
         sf.write(path, np.concatenate(chunks), 24000)
+    elif v["engine"] == "voicepeak":  # your licensed copy. UNTESTED: confirm flags with `voicepeak --help` on your PC
+        exe = v.get("exe", r"C:\Program Files\VOICEPEAK\voicepeak.exe")
+        cmd = [exe, "-s", line["text"], "-n", v["name"], "-o", path, "--speed", str(v.get("speed_pct", 100))]
+        if v.get("emotion"): cmd += ["-e", v["emotion"]]
+        subprocess.run(cmd, check=True)
+    elif v["engine"] == "irodori":  # local; wire to Aratako/Irodori-TTS inference script (see its README), then write wav to path
+        raise SystemExit("irodori: set up the repo's inference CLI, then call it here with line['text'] -> path")
     else: raise SystemExit(f"engine {v['engine']} not implemented (add ElevenLabs etc. here)")
 def sfx(kind, path):  # procedural, royalty-free: generated with FFmpeg
     g = {"whoosh": "anoisesrc=d=0.7:c=pink,highpass=f=400,lowpass=f=5000,afade=t=in:d=0.3,afade=t=out:st=0.3:d=0.4,volume=0.8",

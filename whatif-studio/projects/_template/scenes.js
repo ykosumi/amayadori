@@ -55,7 +55,7 @@ export const shots = [
     id: 'diagram', start: 9, end: 12, kind: 'info',
     draw(ctx, t, l, w, h, I) { // layout adapts: portrait stacks vertically, landscape puts counter left / bars right
       const L = w > h; I.bg(ctx, w, h, t); I.title(ctx, L ? 'SPEED COMPARISON' : 'SPEED\nCOMPARISON', w / 2, L ? 110 : 260, seg(l, 0, 0.5), { size: L ? 80 : 96, color: I.C.cyan });
-      I.counter(ctx, 0, 36, seg(l, 0.3, 1.6), L ? w * 0.27 : w / 2, L ? h * 0.5 : 720, { unit: ' km/h', label: 'Usain Bolt (peak)', size: L ? 130 : 150 });
+      I.counter(ctx, 0, 44.7, seg(l, 0.3, 1.6), L ? w * 0.27 : w / 2, L ? h * 0.5 : 720, { unit: ' km/h', dec: 1, label: 'Usain Bolt (peak)', size: L ? 130 : 150 });
       const bx = L ? w * 0.52 : 120, bw = L ? w * 0.42 : 1000, by = L ? 330 : 840;
       I.bars(ctx, [{ label: '人 (散歩)', value: 5, text: '5 km/h', color: I.C.green }, { label: '10倍', value: 50, text: '50 km/h', color: I.C.yellow }, { label: '自動車 (市街地)', value: 50, text: '50 km/h', color: I.C.pink }], l / 3, bx, by, bw, { max: 50 });
       I.arrow(ctx, bx, L ? 900 : 1500, bx + bw * 0.7, L ? 900 : 1500, seg(l, 1, 2));
