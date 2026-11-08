@@ -1,0 +1,11 @@
+{
+  "name": "whatif_template",
+  "topic": "What if you were 10x faster?",
+  "voice": { "engine": "kokoro", "name": "jf_alpha", "speed": 1.0 },
+  "music": "assets/music.wav",
+  "narration": [
+    { "id": "l01", "start": 0.0, "lang": "j", "text": "もしも、あなたの動きが10倍速くなったら？" }
+  ],
+  "sfx": [ { "at": 4.0, "kind": "whoosh" }, { "at": 7.98, "kind": "impact" } ],
+  "approval": { "script": false, "storyboard": false, "drafts": false, "final": false }
+}
