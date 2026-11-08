@@ -54,3 +54,40 @@ export function captionBand(ctx, w, h, { series = '失われたメディア考�
   ctx.fillStyle = P.cream; ctx.font = `700 50px ${FONT}`; let line = '', y = y0 + 140; const max = w - 120;
   for (const ch of text) { if (ctx.measureText(line + ch).width > max && !'、。」）！？'.includes(ch)) { ctx.fillText(line, 60, y); y += 74; line = ''; } line += ch; } ctx.fillText(line, 60, y);
 }
+
+/** Faceless symbolic hero (geometric parts only). feet at (x,y). phase: gait phase (2PI = full stride), moving 0..1, lean rad. */
+export function hero(ctx, { x, y, s = 1, phase = 0, moving = 0, lean = 0, dir = 1, squash = 0, t = 0, id = 1, body = P.teal, head = P.mustard, tilt = 0 } = {}) {
+  ctx.save(); ctx.translate(x, y - Math.abs(Math.cos(phase)) * 10 * moving * s); ctx.scale(dir * s * (1 + squash * 0.5), s * (1 - squash)); boil(ctx, id, t, 0.6);
+  const sn = Math.sin(phase), cs = Math.cos(phase), HIP = [0, -135];
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = P.ink; ctx.lineWidth = 26;
+  [1, -1].forEach((side) => {  // legs (knee bends on the forward swing)
+    const a = side * sn * 0.85 * moving, kb = Math.max(0, side * cs) * 1.0 * moving;
+    const k = [HIP[0] + 65 * Math.sin(a), HIP[1] + 65 * Math.cos(a)], f = [k[0] + 65 * Math.sin(a - kb), k[1] + 65 * Math.cos(a - kb)];
+    ctx.beginPath(); ctx.moveTo(...HIP); ctx.lineTo(...k); ctx.lineTo(...f); ctx.stroke();
+    ctx.fillStyle = P.brick; ctx.beginPath(); ctx.ellipse(f[0] + 14, f[1] + 4, 32, 15, 0, 0, 7); ctx.fill();
+  });
+  ctx.save(); ctx.translate(0, HIP[1]); ctx.rotate(lean); ctx.translate(0, -HIP[1]);
+  [1, -1].forEach((side) => { // arms swing opposite to legs
+    const a = -side * sn * 0.95 * moving + 0.1, eb = (0.35 + 0.8 * moving), sh = [0, -250];
+    const e = [sh[0] + 55 * Math.sin(a), sh[1] + 55 * Math.cos(a)], hnd = [e[0] + 55 * Math.sin(a + eb), e[1] + 55 * Math.cos(a + eb)];
+    ctx.beginPath(); ctx.moveTo(...sh); ctx.lineTo(...e); ctx.lineTo(...hnd); ctx.stroke();
+  });
+  shape(ctx, rrect(-58, -300, 116, 175, 58), body, { dx: 18, dy: 22, grid: 11 });
+  ctx.fillStyle = P.cream; ctx.fillRect(-58, -225, 116, 20);                // belt stripe (reads as "front" without a face)
+  ctx.save(); ctx.translate(0, -365); ctx.rotate(tilt);
+  shape(ctx, (c) => { c.beginPath(); c.arc(0, 0, 68, 0, 7); }, head, { dx: 18, dy: 22, grid: 11 });
+  ctx.fillStyle = P.brick; ctx.beginPath(); ctx.arc(0, 0, 68, Math.PI, 0); ctx.fill(); ctx.fillStyle = head; ctx.beginPath(); ctx.arc(0, 6, 62, Math.PI, 0); ctx.fill(); // cap band
+  ctx.restore(); ctx.restore(); ctx.restore();
+}
+/** art-area wrapper: clips to y 64..(h-64-440) and applies slow camera push (scale about centre). p = 0..1 progress of the shot */
+export function art(ctx, w, h, p, fn, { push = 0.04 } = {}) {
+  const y0 = 64, y1 = h - 64 - 440; ctx.save(); ctx.beginPath(); ctx.rect(0, y0, w, y1 - y0); ctx.clip();
+  const cy = (y0 + y1) / 2, k = 1 + push * p; ctx.translate(w / 2, cy); ctx.scale(k, k); ctx.translate(-w / 2, -cy); fn(y0, y1, cy); ctx.restore();
+}
+export function text(ctx, str, x, y, size, color = P.ink, align = 'center', weight = 900) { ctx.save(); ctx.font = `${weight} ${size}px ${FONT}`; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillText(str, x, y); ctx.restore(); }
+export function bar(ctx, x, y, w, h, frac, color, p = 1) { shape(ctx, rrect(x, y, Math.max(h, w * frac * Math.min(1, p)), h, h / 2), color, { dx: 12, dy: 14, grid: 11 }); }
+export function speedLines(ctx, w, y0, y1, t, k = 1, dir = -1) {
+  ctx.save(); ctx.strokeStyle = P.ink; ctx.globalAlpha = 0.5 * k; ctx.lineWidth = 8; ctx.lineCap = 'round';
+  for (let i = 0; i < 14; i++) { const yy = y0 + ((i * 97) % (y1 - y0)), len = 160 + (i * 53) % 200, xx = (((i * 211) + hold(t) * 1900) % (w + 400)); ctx.beginPath(); ctx.moveTo(w - xx + 0, yy); ctx.lineTo(w - xx + len * -dir * -1, yy); ctx.stroke(); }
+  ctx.restore();
+}
